@@ -54,5 +54,6 @@ d3.json(DATA_SOURCE).then((data) => {
     svg.append("g")
         .style("font-size", 15)
         .attr("transform", "translate(0," + height + ")")
+        .attr("id", "x-axis")
         .call(d3.axisBottom(x).ticks((DATE.TO - DATE.FROM) / 10));
 });
