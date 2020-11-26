@@ -17,53 +17,51 @@ const MONTHS = [
     "December",
 ];
 
-// Dimensions for graph
-var margin = { top: 30, right: 30, bottom: 30, left: 60 },
-    width = 1200 - margin.left - margin.right,
-    height = 450 - margin.top - margin.bottom;
+const COLORS = [
+    "#ffffd9",
+    "#edf8b1",
+    "#c7e9b4",
+    "#7fcdbb",
+    "#41b6c4",
+    "#1d91c0",
+    "#225ea8",
+    "#253494",
+    "#081d58",
+];
 
-// append an svg object to the body of the page
-var svg = d3
-    .select("#root")
-    .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+// Dimensions for graph
+var margin = { top: 50, right: 0, bottom: 100, left: 30 },
+    width = 960 - margin.left - margin.right,
+    height = 430 - margin.top - margin.bottom,
+    gridSize = Math.floor(width / 24),
+    buckets = 9,
+    colors = [
+        "#ffffd9",
+        "#edf8b1",
+        "#c7e9b4",
+        "#7fcdbb",
+        "#41b6c4",
+        "#1d91c0",
+        "#225ea8",
+        "#253494",
+        "#081d58",
+    ];
+
+var dataHandler = function (error, data) {
+    
+    // returns a color from the color array
+    var colorScale = d3
+        .scaleLinear()
+        .domain([
+            0,
+            buckets - 1,
+            d3.max(data, function (d) {
+                return d.value;
+            }),
+        ])
+        .range(colors);
+};
 
 d3.json(DATA_SOURCE).then((data) => {
-    // data format contains { baseVariance, monthlyVariance}
-    // monthlyVariance, contains array of { year, month, variance}
-
-    // get the from and to years of data available
-    const DATE = {
-        FROM: data.monthlyVariance[0].year,
-        TO: data.monthlyVariance[data.monthlyVariance.length - 1].year,
-    };
-
-    /* =========================== X AXIS ============================ */
-    var x = d3
-        .scaleTime()
-        .range([0, width])
-        .domain([new Date(`${DATE.FROM}`), new Date(`${DATE.TO}`)]);
-
-    // Append X AXIS to svg element
-    svg.append("g")
-        .style("font-size", 15)
-        .attr("transform", "translate(0," + height + ")")
-        .attr("id", "x-axis")
-        .call(
-            d3
-                .axisBottom(x)
-                .ticks((DATE.TO - DATE.FROM) / 10)
-                .tickSizeOuter(0)
-        );
-
-    /* =========================== Y AXIS ============================ */
-    var y = d3.scaleBand().range([height, 0]).domain(MONTHS.reverse());
-
-    // Append Y AXIS to the svg element
-    svg.append("g")
-        .attr("id", "y-axis")
-        .call(d3.axisLeft(y).tickSizeOuter(0));
+    dataHandler(null, data.monthlyVariance);
 });
