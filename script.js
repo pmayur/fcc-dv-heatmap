@@ -17,10 +17,13 @@ const MONTHS = [
     "December",
 ];
 
+const COLORS = ["#adce74", "#61b15a", "#d08752", "#c75643"];
+
 // Dimensions for graph
 var margin = { top: 30, right: 30, bottom: 30, left: 60 },
     width = 1200 - margin.left - margin.right,
-    height = 450 - margin.top - margin.bottom;
+    height = 450 - margin.top - margin.bottom,
+    buckets = 4;
 
 // append an svg object to the body of the page
 var svg = d3
@@ -35,11 +38,17 @@ d3.json(DATA_SOURCE).then((data) => {
     // data format contains { baseVariance, monthlyVariance}
     // monthlyVariance, contains array of { year, month, variance}
 
-    // get the from and to years of data available
-    const DATE = {
-        FROM: data.monthlyVariance[0].year,
-        TO: data.monthlyVariance[data.monthlyVariance.length - 1].year,
-    };
+    // returns a color from the color array
+    var colorScale = d3
+        .scaleLinear()
+        .domain([
+            0,
+            buckets - 1,
+            d3.max(data.monthlyVariance, function (d) {
+                return d.variance;
+            }),
+        ])
+        .range(COLORS);
 
     /* =========================== X AXIS ============================ */
     var x = d3
@@ -49,7 +58,8 @@ d3.json(DATA_SOURCE).then((data) => {
             data.monthlyVariance.map(function (val) {
                 return val.year;
             })
-        );
+        )
+        .padding(0.1);
 
     // Append X AXIS to svg element
     svg.append("g")
@@ -74,4 +84,18 @@ d3.json(DATA_SOURCE).then((data) => {
 
     // Append Y AXIS to the svg element
     svg.append("g").attr("id", "y-axis").call(d3.axisLeft(y).tickSizeOuter(0));
+
+    svg.selectAll(".hour")
+        .data(data.monthlyVariance)
+        .enter()
+        .append("rect")
+        .attr("x", (d) => x(d.year))
+        .attr("y", (d) => y(MONTHS[d.month - 1]))
+        .attr("class", "hour bordered")
+        .attr("width", x.bandwidth())
+        .attr("height", y.bandwidth())
+        .style("fill", COLORS[0])
+        .style("fill", function (d) {
+            return colorScale(d.variance);
+        });
 });
