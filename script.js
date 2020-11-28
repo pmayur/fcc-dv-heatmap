@@ -43,9 +43,13 @@ d3.json(DATA_SOURCE).then((data) => {
 
     /* =========================== X AXIS ============================ */
     var x = d3
-        .scaleTime()
+        .scaleBand()
         .range([0, width])
-        .domain([new Date(`${DATE.FROM}`), new Date(`${DATE.TO}`)]);
+        .domain(
+            data.monthlyVariance.map(function (val) {
+                return val.year;
+            })
+        );
 
     // Append X AXIS to svg element
     svg.append("g")
@@ -55,15 +59,19 @@ d3.json(DATA_SOURCE).then((data) => {
         .call(
             d3
                 .axisBottom(x)
-                .ticks((DATE.TO - DATE.FROM) / 10)
+                .tickValues(
+                    x.domain().filter(function (year) {
+                        // set ticks to years divisible by 10
+                        return year % 10 === 0;
+                    })
+                )
                 .tickSizeOuter(0)
+                .tickFormat((y) => d3.timeFormat("%Y")(new Date(`${y}`)))
         );
 
     /* =========================== Y AXIS ============================ */
     var y = d3.scaleBand().range([height, 0]).domain(MONTHS.reverse());
 
     // Append Y AXIS to the svg element
-    svg.append("g")
-        .attr("id", "y-axis")
-        .call(d3.axisLeft(y).tickSizeOuter(0));
+    svg.append("g").attr("id", "y-axis").call(d3.axisLeft(y).tickSizeOuter(0));
 });
