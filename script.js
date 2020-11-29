@@ -90,7 +90,7 @@ d3.json(DATA_SOURCE).then((data) => {
         .enter()
         .append("rect")
         .attr("x", (d) => x(d.year))
-        .attr("y", (d) => y(MONTHS[d.month - 1]))
+        .attr("y", (d) => y(MONTHS[11 - (d.month - 1)]))
         .attr("class", "hour bordered")
         .attr("width", x.bandwidth())
         .attr("height", y.bandwidth())
