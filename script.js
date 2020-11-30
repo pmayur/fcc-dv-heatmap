@@ -23,7 +23,9 @@ const COLORS = ["#adce74", "#61b15a", "#d08752", "#c75643"];
 var margin = { top: 30, right: 30, bottom: 30, left: 60 },
     width = 1200 - margin.left - margin.right,
     height = 450 - margin.top - margin.bottom,
-    buckets = 4;
+    buckets = 4,
+    legendHeight = 20,
+    legendWidth = width + margin.left + margin.right;
 
 // append an svg object to the body of the page
 var svg = d3
@@ -35,8 +37,15 @@ var svg = d3
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 d3.json(DATA_SOURCE).then((data) => {
-    // data format contains { baseVariance, monthlyVariance}
+    // data format contains { baseTemperature, monthlyVariance}
     // monthlyVariance, contains array of { year, month, variance}
+
+    const BASE_TEMP = data.baseTemperature;
+
+    var TEMP = {
+        MIN: data.monthlyVariance[0].variance,
+        MAX: data.monthlyVariance[0].variance
+    }
 
     // returns a color from the color array
     var colorScale = d3
@@ -44,9 +53,6 @@ d3.json(DATA_SOURCE).then((data) => {
         .domain([
             0,
             buckets - 1,
-            d3.max(data.monthlyVariance, function (d) {
-                return d.variance;
-            }),
         ])
         .range(COLORS);
 
@@ -56,6 +62,14 @@ d3.json(DATA_SOURCE).then((data) => {
         .range([0, width])
         .domain(
             data.monthlyVariance.map(function (val) {
+
+                if(val.variance > TEMP.MAX) {
+                    TEMP.MAX = val.variance;
+                }
+                if(val.variance < TEMP.MIN) {
+                    TEMP.MIN = val.variance;
+                }
+
                 return val.year;
             })
         )
@@ -101,4 +115,48 @@ d3.json(DATA_SOURCE).then((data) => {
         .style("fill", function (d) {
             return colorScale(d.variance);
         });
+    
+    legendArray = createLegendArray(TEMP.MIN, TEMP.MAX, BASE_TEMP);
+    
+    var legend = d3
+        .scaleBand()
+        .range([0, width / 3])
+        .domain(legendArray);
+
+    svg.append("g")
+        .style("font-size", 15)
+        .attr("transform", "translate(" + height + "," + legendHeight + ")")
+        .call(d3.axisBottom(legend));
+
+    var legendSVG = svg
+        .append('g')
+        .classed('legend', true)
+        .attr('id', 'legend')
+        .attr(
+          'transform',
+          'translate(' +
+            height +
+            ',' +
+            (legendHeight - 10) +
+            ')'
+        );
 });
+
+const preciseFLoat = (flt) => {
+    return parseFloat((flt).toFixed(2));
+}
+
+const createLegendArray = (min, max, base) => {
+    let minVal = preciseFLoat(min + base);
+    let maxVal = preciseFLoat(max + base);
+
+    var legendArray = [minVal];
+    var start = minVal;
+
+    while( start < maxVal ) {
+        start += (maxVal - minVal ) / 4;
+        legendArray.push(preciseFLoat(start));
+    }
+
+    return legendArray;
+}
