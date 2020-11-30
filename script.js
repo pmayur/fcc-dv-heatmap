@@ -49,7 +49,7 @@ d3.json(DATA_SOURCE).then((data) => {
 
     // returns a color from the color array
     var colorScale = d3
-        .scaleLinear()
+        .scaleQuantize()
         .domain([
             0,
             buckets - 1,
@@ -121,13 +121,49 @@ d3.json(DATA_SOURCE).then((data) => {
     var legend = d3
         .scaleBand()
         .range([0, width / 3])
-        .domain(legendArray);
+        .domain(legendArray).round(0.1);
 
     svg.append("g")
         .style("font-size", 15)
         .attr("transform", "translate(" + 0 + "," + (height + legendHeight) + ")")
         .call(d3.axisBottom(legend));
 
+    var legendSVG = svg
+        .append('g')
+        .classed('legend', true)
+        .attr('id', 'legend')
+        .attr(
+          'transform',
+          'translate(' +
+            0 +
+            ',' +
+            (height + 50) +
+            ')'
+        );
+
+    legendSVG
+        .append('g')
+        .selectAll('rect')
+        .data(legendArray)
+        .enter()
+        .append('rect')
+        .style('fill', function (d, i) {
+            console.log(i)
+            console.log(COLORS[i])
+            if(i < 4)
+                return COLORS[i];
+            else 
+                return "#ffffff"
+        })
+        .attr("x", (d) => (legend(d) + 33))
+        .attr("y", 35)
+        .attr("width", legend.bandwidth())
+        .attr("height", 20)
+    
+    legendSVG
+        .append('g')
+        .attr('transform', 'translate(' + height + ',' + (legendHeight - 30) + ')')
+        .call(legend);
 });
 
 const preciseFLoat = (flt) => {
