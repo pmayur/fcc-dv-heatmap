@@ -24,7 +24,7 @@ var margin = { top: 30, right: 30, bottom: 30, left: 60 },
     width = 1200 - margin.left - margin.right,
     height = 450 - margin.top - margin.bottom,
     buckets = 4,
-    legendHeight = 20,
+    legendHeight = 120,
     legendWidth = width + margin.left + margin.right;
 
 // append an svg object to the body of the page
@@ -32,7 +32,7 @@ var svg = d3
     .select("#root")
     .append("svg")
     .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
+    .attr("height", height + margin.top + margin.bottom + legendHeight)
     .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -125,21 +125,9 @@ d3.json(DATA_SOURCE).then((data) => {
 
     svg.append("g")
         .style("font-size", 15)
-        .attr("transform", "translate(" + height + "," + legendHeight + ")")
+        .attr("transform", "translate(" + 0 + "," + (height + legendHeight) + ")")
         .call(d3.axisBottom(legend));
 
-    var legendSVG = svg
-        .append('g')
-        .classed('legend', true)
-        .attr('id', 'legend')
-        .attr(
-          'transform',
-          'translate(' +
-            height +
-            ',' +
-            (legendHeight - 10) +
-            ')'
-        );
 });
 
 const preciseFLoat = (flt) => {
