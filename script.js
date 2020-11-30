@@ -46,16 +46,13 @@ d3.json(DATA_SOURCE).then((data) => {
     // stores the minimum and maximum temperature variance in the dataset
     var TEMP = {
         MIN: data.monthlyVariance[0].variance,
-        MAX: data.monthlyVariance[0].variance
-    }
+        MAX: data.monthlyVariance[0].variance,
+    };
 
     // returns a color from the color array
     var colorScale = d3
         .scaleQuantize()
-        .domain([
-            0,
-            buckets - 1,
-        ])
+        .domain([0, buckets - 1])
         .range(COLORS);
 
     // X Axis
@@ -64,11 +61,10 @@ d3.json(DATA_SOURCE).then((data) => {
         .range([0, width])
         .domain(
             data.monthlyVariance.map(function (val) {
-
-                if(val.variance > TEMP.MAX) {
+                if (val.variance > TEMP.MAX) {
                     TEMP.MAX = val.variance;
                 }
-                if(val.variance < TEMP.MIN) {
+                if (val.variance < TEMP.MIN) {
                     TEMP.MIN = val.variance;
                 }
 
@@ -117,68 +113,95 @@ d3.json(DATA_SOURCE).then((data) => {
         .style("fill", COLORS[0])
         .style("fill", function (d) {
             return colorScale(d.variance);
+        })
+        .on("mouseover", function (d) {
+            let month = d.srcElement.getAttribute("data-month");
+            let year = d.srcElement.getAttribute("data-year");
+            let value = d.srcElement.getAttribute("data-temp");
+
+            tooltip.attr("data-year", year);
+
+            tooltip
+                .html(
+                    MONTHS[parseInt(11 - month)] +
+                        "  " +
+                        year +
+                        "<br/>" +
+                        "Base Variance: " + BASE_TEMP +
+                        "<br/>" +
+                        "Variance: " + value 
+                )
+                .style("left", d.pageX + "px")
+                .style("top", d.pageY - 28 + "px");
+
+            tooltip.transition().duration(200).style("opacity", 0.9);
+        })
+        .on("mouseout", function (d) {
+            tooltip.transition().duration(500).style("opacity", 0);
         });
-    
+
     // creates an array for legend axis
     legendArray = createLegendArray(TEMP.MIN, TEMP.MAX, BASE_TEMP);
-    
+
     // legend axis
     var legend = d3
         .scaleBand()
         .range([0, width / 3])
-        .domain(legendArray).round(0.1);
+        .domain(legendArray)
+        .round(0.1);
 
     // append legend axis
     svg.append("g")
         .style("font-size", 15)
-        .attr("transform", "translate(" + 0 + "," + (height + legendHeight) + ")")
+        .attr(
+            "transform",
+            "translate(" + 0 + "," + (height + legendHeight) + ")"
+        )
         .call(d3.axisBottom(legend));
 
     // create legend box
     var legendSVG = svg
-        .append('g')
-        .classed('legend', true)
-        .attr('id', 'legend')
-        .attr(
-          'transform',
-          'translate(' +
-            0 +
-            ',' +
-            (height + 50) +
-            ')'
-        );
-    
+        .append("g")
+        .classed("legend", true)
+        .attr("id", "legend")
+        .attr("transform", "translate(" + 0 + "," + (height + 50) + ")");
+
     // add rect elements to legend box
     legendSVG
-        .append('g')
-        .selectAll('rect')
+        .append("g")
+        .selectAll("rect")
         .data(legendArray)
         .enter()
-        .append('rect')
-        .style('fill', function (d, i) {
-            console.log(i)
-            console.log(COLORS[i])
-            if(i < 4)
-                return COLORS[i];
-            else 
-                return "#ffffff"
+        .append("rect")
+        .style("fill", function (d, i) {
+            if (i < 4) return COLORS[i];
+            else return "#ffffff";
         })
-        .attr("x", (d) => (legend(d) + 33))
+        .attr("x", (d) => legend(d) + 37)
         .attr("y", 35)
         .attr("width", legend.bandwidth())
-        .attr("height", 20)
-    
-    // append legend box to the map 
+        .attr("height", 20);
+
+    // append legend box to the map
     legendSVG
-        .append('g')
-        .attr('transform', 'translate(' + height + ',' + (legendHeight - 30) + ')')
+        .append("g")
+        .attr(
+            "transform",
+            "translate(" + height + "," + (legendHeight - 30) + ")"
+        )
         .call(legend);
+
+    var tooltip = d3
+        .select("#root")
+        .append("div")
+        .attr("id", "tooltip")
+        .style("opacity", 0);
 });
 
 // converts and returns float to a precision of 2
 const preciseFLoat = (flt) => {
-    return parseFloat((flt).toFixed(2));
-}
+    return parseFloat(flt.toFixed(2));
+};
 
 // creates an array from min to max values
 const createLegendArray = (min, max, base) => {
@@ -188,10 +211,10 @@ const createLegendArray = (min, max, base) => {
     var legendArray = [minVal];
     var start = minVal;
 
-    while( start < maxVal ) {
-        start += (maxVal - minVal ) / 4;
+    while (start < maxVal) {
+        start += (maxVal - minVal) / 4;
         legendArray.push(preciseFLoat(start));
     }
 
     return legendArray;
-}
+};
