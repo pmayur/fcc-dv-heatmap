@@ -40,8 +40,10 @@ d3.json(DATA_SOURCE).then((data) => {
     // data format contains { baseTemperature, monthlyVariance}
     // monthlyVariance, contains array of { year, month, variance}
 
+    // stores the base temperature upon which the temperature varies
     const BASE_TEMP = data.baseTemperature;
 
+    // stores the minimum and maximum temperature variance in the dataset
     var TEMP = {
         MIN: data.monthlyVariance[0].variance,
         MAX: data.monthlyVariance[0].variance
@@ -56,7 +58,7 @@ d3.json(DATA_SOURCE).then((data) => {
         ])
         .range(COLORS);
 
-    /* =========================== X AXIS ============================ */
+    // X Axis
     var x = d3
         .scaleBand()
         .range([0, width])
@@ -93,13 +95,14 @@ d3.json(DATA_SOURCE).then((data) => {
                 .tickFormat((y) => d3.timeFormat("%Y")(new Date(`${y}`)))
         );
 
-    /* =========================== Y AXIS ============================ */
+    // Y Axis
     var y = d3.scaleBand().range([height, 0]).domain(MONTHS.reverse());
 
     // Append Y AXIS to the svg element
     svg.append("g").attr("id", "y-axis").call(d3.axisLeft(y).tickSizeOuter(0));
 
-    svg.selectAll(".hour")
+    // the heatmap for the variance
+    svg.selectAll(".map")
         .data(data.monthlyVariance)
         .enter()
         .append("rect")
@@ -116,18 +119,22 @@ d3.json(DATA_SOURCE).then((data) => {
             return colorScale(d.variance);
         });
     
+    // creates an array for legend axis
     legendArray = createLegendArray(TEMP.MIN, TEMP.MAX, BASE_TEMP);
     
+    // legend axis
     var legend = d3
         .scaleBand()
         .range([0, width / 3])
         .domain(legendArray).round(0.1);
 
+    // append legend axis
     svg.append("g")
         .style("font-size", 15)
         .attr("transform", "translate(" + 0 + "," + (height + legendHeight) + ")")
         .call(d3.axisBottom(legend));
 
+    // create legend box
     var legendSVG = svg
         .append('g')
         .classed('legend', true)
@@ -140,7 +147,8 @@ d3.json(DATA_SOURCE).then((data) => {
             (height + 50) +
             ')'
         );
-
+    
+    // add rect elements to legend box
     legendSVG
         .append('g')
         .selectAll('rect')
@@ -160,16 +168,19 @@ d3.json(DATA_SOURCE).then((data) => {
         .attr("width", legend.bandwidth())
         .attr("height", 20)
     
+    // append legend box to the map 
     legendSVG
         .append('g')
         .attr('transform', 'translate(' + height + ',' + (legendHeight - 30) + ')')
         .call(legend);
 });
 
+// converts and returns float to a precision of 2
 const preciseFLoat = (flt) => {
     return parseFloat((flt).toFixed(2));
 }
 
+// creates an array from min to max values
 const createLegendArray = (min, max, base) => {
     let minVal = preciseFLoat(min + base);
     let maxVal = preciseFLoat(max + base);
